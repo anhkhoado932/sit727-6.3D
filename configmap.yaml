@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sit727-config
+  namespace: default
+  labels:
+    type: config
+    app: sit727
+data: 
+  POSTGRES_PASSWORD: "password"
+  TIMESCALE_TELEMETRY: "off"

@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sit727-standby
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: sit727-standby
+  template:
+    metadata:
+      labels:
+        type: sit727-standby
+        app: sit727-standby
+    spec:
+      containers:
+      - image: postgres:10
+        imagePullPolicy: IfNotPresent
+        name: sit727-standby
+        ports:
+          - containerPort: 5432
+        envFrom:
+          - configMapRef:
+              name: sit727-config
+        volumeMounts:
+          - name: sit727-standby-mnt
+            mountPath: /var/lib/postgresql/data
+            subPath: sit727_standby/data
+      volumes:
+      - name: sit727-standby-mnt
+        persistentVolumeClaim:
+          # use nfs for dev and nfs-standby for prod  
+          #claimName: nfs
+          claimName: nfs-standby
+      - name: sit727-standby-config-mnt
+        configMap:
+          name: sit727-standby-conf-files-config
+      initContainers:
+      - name: init-sit727-standby
+        image: timescale/timescaledb:latest-pg10
+        command: ['sh', '-c', 'cp /var/lib/postgresql/data/postgresql.main.conf /var/lib/postgresql/data/postgresql.conf && cp /var/lib/postgresql/data/recovery.main.conf /var/lib/postgresql/data/recovery.conf && chmod 600 /var/lib/postgresql/data/postgresql.conf && chmod 600 /var/lib/postgresql/data/recovery.conf']
+        volumeMounts:
+        - name: sit727-standby-mnt
+          mountPath: /var/lib/postgresql/data
+          subPath: sit727_standby/data    
+        - name: sit727-standby-config-mnt
+          mountPath: /var/lib/postgresql/data/postgresql.main.conf
+          subPath: postgresql.conf
+        - name: sit727-standby-config-mnt
+          mountPath: /var/lib/postgresql/data/recovery.main.conf
+          subPath: recovery.conf              
