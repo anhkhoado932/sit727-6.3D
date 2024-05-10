@@ -21,3 +21,5 @@ k create configmap sit727-conf-files-config --from-file config
 ```
 k create -f deployment.yaml
 ```
+
+TODO -- continue later
